@@ -39,28 +39,30 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            Color.white
+            // Video fills entire window
+            VideoBackground()
+                .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                // MacBook screen area with notch
+            // White bezel top (with notch)
+            VStack {
                 ZStack(alignment: .top) {
-                    // The screen (video)
-                    VideoBackground()
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-                    // Notch
+                    Color.white
                     MacBookNotch()
                         .frame(width: 80, height: 14)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
-                .padding(.bottom, 16)
+                .frame(height: 22)
+                Spacer()
+                Color.white
+                    .frame(height: 22)
+            }
 
-                // Content below the screen
-                VStack(spacing: 0) {
-                    stepContent
-                    bottomBar
-                }
+            // Content on top
+            VStack(spacing: 0) {
+                Spacer().frame(height: 22)
+                stepContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                bottomBar
+                Spacer().frame(height: 22)
             }
         }
         .frame(width: 600, height: 440)
