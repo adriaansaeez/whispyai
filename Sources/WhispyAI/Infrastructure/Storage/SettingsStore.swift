@@ -24,6 +24,11 @@ struct SettingsStore: @unchecked Sendable {
         settings.customModel = defaults.string(forKey: Keys.customModel) ?? settings.customModel
         settings.rewritePrompt = defaults.string(forKey: Keys.rewritePrompt) ?? settings.rewritePrompt
 
+        if let workModeRaw = defaults.string(forKey: Keys.defaultWorkMode),
+           let workMode = PromptContextKind(rawValue: workModeRaw) {
+            settings.defaultWorkMode = workMode
+        }
+
         if defaults.object(forKey: Keys.launchAtLogin) != nil {
             settings.launchAtLogin = defaults.bool(forKey: Keys.launchAtLogin)
         }
@@ -68,6 +73,7 @@ struct SettingsStore: @unchecked Sendable {
         defaults.set(settings.customModel, forKey: Keys.customModel)
         defaults.set(settings.customUseAuth, forKey: Keys.customUseAuth)
         defaults.set(settings.rewritePrompt, forKey: Keys.rewritePrompt)
+        defaults.set(settings.defaultWorkMode.rawValue, forKey: Keys.defaultWorkMode)
         defaults.set(settings.temperature, forKey: Keys.temperature)
         defaults.set(settings.maximumTokens, forKey: Keys.maximumTokens)
         defaults.set(settings.timeoutSeconds, forKey: Keys.timeoutSeconds)
@@ -89,7 +95,8 @@ private extension SettingsStore {
         static let customBaseURL = "customBaseURL"
         static let customModel = "customModel"
         static let customUseAuth = "customUseAuth"
-        static let rewritePrompt = "rewritePrompt"
+            static let rewritePrompt = "rewritePrompt"
+            static let defaultWorkMode = "defaultWorkMode"
         static let temperature = "temperature"
         static let maximumTokens = "maximumTokens"
         static let timeoutSeconds = "timeoutSeconds"

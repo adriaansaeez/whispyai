@@ -42,6 +42,9 @@ final class AppState {
 
         Self.shared = self
         hasCompletedOnboarding = settingsStore.hasCompletedOnboarding
+
+        let savedMode = settingsStore.load().defaultWorkMode
+        manualContextKind = savedMode == .autodetect ? nil : savedMode
     }
 
     func toggleDictation() {

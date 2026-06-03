@@ -92,12 +92,6 @@ struct ProviderSettingsView: View {
                 }
             }
         }
-
-        Section {
-            Text("Default: http://localhost:4000 — point this to your LiteLLM server.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
     }
 
     @ViewBuilder

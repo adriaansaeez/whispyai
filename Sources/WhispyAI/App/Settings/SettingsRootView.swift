@@ -16,7 +16,7 @@ struct SettingsRootView: View {
                     Label("AI", systemImage: "sparkles")
                 }
 
-            HotkeySettingsView()
+            HotkeySettingsView(appState: appState, viewModel: viewModel)
                 .tabItem {
                     Label("Hotkey", systemImage: "keyboard")
                 }

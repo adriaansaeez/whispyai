@@ -16,6 +16,7 @@ final class SettingsViewModel {
     var customUseAuth = false
     var apiKey = ""
     var selectedModel = "gpt-4o-mini"
+    var defaultWorkMode: PromptContextKind = .autodetect
 
     var isTestingConnection = false
     var connectionResult: String?
@@ -31,6 +32,7 @@ final class SettingsViewModel {
         customModel = settings.customModel
         customUseAuth = settings.customUseAuth
         selectedModel = settings.selectedModel
+        defaultWorkMode = settings.defaultWorkMode
         hasChanges = false
     }
 
@@ -45,6 +47,7 @@ final class SettingsViewModel {
         settings.customModel = customModel
         settings.customUseAuth = customUseAuth
         settings.selectedModel = selectedModel
+        settings.defaultWorkMode = defaultWorkMode
         store.save(settings)
 
         if !apiKey.isEmpty {

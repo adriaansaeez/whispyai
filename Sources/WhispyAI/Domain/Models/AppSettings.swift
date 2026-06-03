@@ -8,6 +8,7 @@ struct AppSettings: Equatable {
     var customModel = "gpt-4o-mini"
     var customUseAuth = false
     var rewritePrompt = DefaultPromptEngine.defaultPromptTemplate
+    var defaultWorkMode: PromptContextKind = .autodetect
     var temperature = 0.2
     var maximumTokens = 300
     var timeoutSeconds = 12
