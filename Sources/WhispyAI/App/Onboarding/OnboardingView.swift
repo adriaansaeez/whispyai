@@ -1,4 +1,3 @@
-import AVKit
 import KeyboardShortcuts
 import SwiftUI
 
@@ -24,6 +23,17 @@ enum OnboardingStep: Int, CaseIterable {
     }
 }
 
+// MARK: - Onboarding Colors
+
+private enum OnboardingBlue {
+    static let deep    = Color(red: 0.04, green: 0.12, blue: 0.30)  // #0a1f4d
+    static let dark    = Color(red: 0.08, green: 0.22, blue: 0.50)  // #143880
+    static let mid     = Color(red: 0.15, green: 0.40, blue: 0.75)  // #2666bf
+    static let bright  = Color(red: 0.25, green: 0.58, blue: 0.96)  // #4094f5
+    static let light   = Color(red: 0.65, green: 0.82, blue: 1.0)   // #a6d1ff
+    static let surface = Color.white.opacity(0.12)
+}
+
 // MARK: - Main Onboarding View
 
 struct OnboardingView: View {
@@ -39,30 +49,19 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            // Video fills entire window
-            VideoBackground()
-                .ignoresSafeArea()
+            // Solid blue gradient background
+            LinearGradient(
+                colors: [OnboardingBlue.deep, OnboardingBlue.dark, OnboardingBlue.mid],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
 
-            // White bezel top (with notch)
-            VStack {
-                ZStack(alignment: .top) {
-                    Color.white
-                    MacBookNotch()
-                        .frame(width: 80, height: 14)
-                }
-                .frame(height: 22)
-                Spacer()
-                Color.white
-                    .frame(height: 22)
-            }
-
-            // Content on top
+            // Content
             VStack(spacing: 0) {
-                Spacer().frame(height: 22)
                 stepContent
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 bottomBar
-                Spacer().frame(height: 22)
             }
         }
         .frame(width: 600, height: 440)
@@ -94,13 +93,14 @@ struct OnboardingView: View {
         VStack(spacing: 20) {
             Spacer()
             LogoShape()
-                .fill(Color(red: 0.2, green: 0.71, blue: 0.96))
+                .fill(.white)
                 .frame(width: 80, height: 80)
             Text("WhispyAI")
                 .font(.system(size: 36, weight: .bold))
+                .foregroundStyle(.white)
             Text("Speak naturally and let AI rewrite your text\nbefore it is inserted where you are typing.")
                 .font(.title3)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(OnboardingBlue.light)
                 .multilineTextAlignment(.center)
             Spacer()
         }
@@ -113,7 +113,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 20) {
             stepTitle(OnboardingStep.provider.title)
             Text("Select the AI service that will rewrite your dictated text. You can change this later in Settings.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(OnboardingBlue.light)
 
             Picker("Provider", selection: $selectedProvider) {
                 ForEach(AIProviderKind.allCases) { provider in
@@ -135,7 +135,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             stepTitle(OnboardingStep.configuration.title)
             Text("Enter the connection details for \(selectedProvider.rawValue).")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(OnboardingBlue.light)
 
             if selectedProvider == .custom {
                 TextField("Base URL", text: $customBaseURL)
@@ -156,11 +156,11 @@ struct OnboardingView: View {
 
                 HStack(spacing: 6) {
                     Image(systemName: "lock.shield")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(OnboardingBlue.bright)
                         .font(.caption)
                     Text("Your API key is stored securely in Apple Keychain and never leaves your device.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(OnboardingBlue.light)
                 }
             }
 
@@ -176,7 +176,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             stepTitle(OnboardingStep.workMode.title)
             Text("Choose how Whispy processes your dictated text. You can switch modes anytime with the hotkey.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(OnboardingBlue.light)
 
             Picker("Mode", selection: $workMode) {
                 ForEach(PromptContextKind.allCases, id: \.self) { kind in
@@ -188,14 +188,12 @@ struct OnboardingView: View {
 
             Text(workMode.description)
                 .font(.body)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color.blue.opacity(0.06))
-                )
+                .background(OnboardingBlue.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .animation(.easeInOut(duration: 0.2), value: workMode)
 
             Spacer()
@@ -210,17 +208,17 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 20) {
             stepTitle(OnboardingStep.hotkey.title)
             Text("This shortcut will start and stop dictation from anywhere on your Mac.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(OnboardingBlue.light)
 
             KeyboardShortcuts.Recorder("Dictation hotkey", name: .toggleDictation)
                 .padding(.top, 8)
 
             HStack(spacing: 6) {
                 Image(systemName: "info.circle")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(OnboardingBlue.light)
                 Text("Default: Option + Space. You can record a custom shortcut above.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(OnboardingBlue.light)
             }
 
             Spacer()
@@ -235,13 +233,14 @@ struct OnboardingView: View {
         VStack(spacing: 20) {
             Spacer()
             LogoShape()
-                .fill(Color(red: 0.2, green: 0.71, blue: 0.96))
+                .fill(.white)
                 .frame(width: 80, height: 80)
             Text("You're all set!")
                 .font(.system(size: 30, weight: .bold))
+                .foregroundStyle(.white)
             Text("Press your hotkey to start dictating.\nYou can change these settings anytime from the menu bar.")
                 .font(.title3)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(OnboardingBlue.light)
                 .multilineTextAlignment(.center)
             Spacer()
         }
@@ -259,7 +258,7 @@ struct OnboardingView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(OnboardingBlue.light)
             }
 
             Spacer()
@@ -302,7 +301,7 @@ struct OnboardingView: View {
         HStack(spacing: 8) {
             ForEach(1..<OnboardingStep.allCases.count, id: \.self) { index in
                 Circle()
-                    .fill(index <= currentStep.rawValue ? Color.blue : Color.gray.opacity(0.3))
+                    .fill(index <= currentStep.rawValue ? .white : OnboardingBlue.surface)
                     .frame(width: 8, height: 8)
             }
         }
@@ -335,6 +334,7 @@ struct OnboardingView: View {
         Text(text)
             .font(.title2)
             .fontWeight(.semibold)
+            .foregroundStyle(.white)
     }
 
     // MARK: - Save & Complete
@@ -391,115 +391,6 @@ private extension PromptContextKind {
         case .neutral:
             return "Makes minimal changes — fixes grammar and punctuation while preserving your original voice."
         }
-    }
-}
-
-// MARK: - MacBook Notch
-
-private struct MacBookNotch: View {
-    var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-            let r: CGFloat = 5
-
-            Path { path in
-                path.move(to: CGPoint(x: 0, y: h))
-                path.addLine(to: CGPoint(x: 0, y: r))
-                path.addArc(
-                    center: CGPoint(x: r, y: r),
-                    radius: r,
-                    startAngle: .degrees(180),
-                    endAngle: .degrees(270),
-                    clockwise: false
-                )
-                path.addLine(to: CGPoint(x: w - r, y: 0))
-                path.addArc(
-                    center: CGPoint(x: w - r, y: r),
-                    radius: r,
-                    startAngle: .degrees(270),
-                    endAngle: .degrees(0),
-                    clockwise: false
-                )
-                path.addLine(to: CGPoint(x: w, y: h))
-                path.closeSubpath()
-            }
-            .fill(Color.white)
-        }
-    }
-}
-
-// MARK: - Video Background
-
-private struct VideoBackground: NSViewRepresentable {
-    func makeNSView(context: Context) -> AVPlayerView {
-        let view = AVPlayerView()
-        view.controlsStyle = .none
-        view.showsFullScreenToggleButton = false
-
-        guard let url = Self.resourceURL(forResource: "onboarding-bg", withExtension: "mp4") else {
-            DebugLogger.log("onboarding-bg.mp4 not found in any bundle")
-            return view
-        }
-
-        DebugLogger.log("onboarding-bg.mp4 found at: \(url.path)")
-
-        let player = AVPlayer(url: url)
-        player.preventsDisplaySleepDuringVideoPlayback = true
-        player.actionAtItemEnd = .none
-
-        NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: player.currentItem,
-            queue: .main
-        ) { _ in
-            player.seek(to: .zero)
-            player.play()
-        }
-
-        view.player = player
-        player.play()
-
-        return view
-    }
-
-    func updateNSView(_ nsView: AVPlayerView, context: Context) {}
-
-    private static func resourceURL(forResource name: String, withExtension ext: String) -> URL? {
-        // 1. Try Bundle.main (works in Xcode projects)
-        if let url = Bundle.main.url(forResource: name, withExtension: ext) {
-            return url
-        }
-
-        // 2. SPM executable: resource bundle is next to the executable
-        if let execURL = Bundle.main.executableURL {
-            let execDir = execURL.deletingLastPathComponent()
-            let bundleNames = [
-                "WhispyAI_WhispyAI",
-                "WhispyAI",
-            ]
-
-            for bundleName in bundleNames {
-                let bundleURL = execDir.appendingPathComponent("\(bundleName).bundle")
-                if let url = Bundle(url: bundleURL)?.url(forResource: name, withExtension: ext) {
-                    return url
-                }
-            }
-
-            // 3. Search for any .bundle in the executable directory
-            if let items = try? FileManager.default.contentsOfDirectory(
-                at: execDir,
-                includingPropertiesForKeys: nil
-            ) {
-                for item in items where item.pathExtension == "bundle" {
-                    if let url = Bundle(url: item)?.url(forResource: name, withExtension: ext) {
-                        return url
-                    }
-                }
-            }
-        }
-
-        return nil
     }
 }
 
