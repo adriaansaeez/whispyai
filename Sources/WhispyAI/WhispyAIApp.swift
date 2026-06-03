@@ -22,10 +22,7 @@ struct WhispyAIApp: App {
         MenuBarExtra {
             MenuBarView(appState: appState)
         } label: {
-            LogoTemplateShape()
-                .fill(.primary)
-                .frame(width: 18, height: 18)
-                .padding(1)
+            Image(nsImage: LogoTemplateShape.menuBarImage())
         }
         .menuBarExtraStyle(.menu)
         .onChange(of: appState.hasCompletedOnboarding) { _, completed in

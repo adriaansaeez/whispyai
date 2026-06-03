@@ -14,8 +14,6 @@ struct LogoShape: Shape {
 
         var path = Path()
 
-        // Blue body (the W shape)
-        let blue = Color(red: 0.2, green: 0.71, blue: 0.96) // #33b5f5
         // Top bar
         path.addRect(r(6, 3, 6, 1))
         // Right column
@@ -77,14 +75,31 @@ struct LogoTemplateShape: Shape {
 // MARK: - NSImage helper for menubar
 
 extension LogoTemplateShape {
-    /// Renders the logo as a template NSImage suitable for NSStatusBarButton.
-    static func templateImage(pointSize: CGFloat) -> NSImage {
+    /// Loads the menubar icon PNG from the resource bundle.
+    /// Falls back to a programmatic render if the bundle resource is missing.
+    static func menuBarImage(pointSize: CGFloat = 18) -> NSImage {
+        if let url = Bundle.module.url(forResource: "menubar-icon", withExtension: "png"),
+           let nsImage = NSImage(contentsOf: url) {
+            let resized = NSImage(size: NSSize(width: pointSize, height: pointSize))
+            resized.lockFocus()
+            NSGraphicsContext.current?.imageInterpolation = .high
+            nsImage.draw(
+                in: NSRect(x: 0, y: 0, width: pointSize, height: pointSize),
+                from: .zero,
+                operation: .copy,
+                fraction: 1.0
+            )
+            resized.unlockFocus()
+            resized.isTemplate = true
+            return resized
+        }
+        // Fallback: render from shape
         let size = NSSize(width: pointSize, height: pointSize)
         let image = NSImage(size: size, flipped: false) { rect in
             let shape = LogoTemplateShape()
             let path = shape.path(in: rect)
             NSColor.black.set()
-            path.fill()
+            _ = path.fill()
             return true
         }
         image.isTemplate = true
