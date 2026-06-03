@@ -39,11 +39,28 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            VideoBackground()
+            Color.white
 
             VStack(spacing: 0) {
-                stepContent
-                bottomBar
+                // MacBook screen area with notch
+                ZStack(alignment: .top) {
+                    // The screen (video)
+                    VideoBackground()
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                    // Notch
+                    MacBookNotch()
+                        .frame(width: 80, height: 14)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 12)
+                .padding(.bottom, 16)
+
+                // Content below the screen
+                VStack(spacing: 0) {
+                    stepContent
+                    bottomBar
+                }
             }
         }
         .frame(width: 600, height: 440)
@@ -371,6 +388,41 @@ private extension PromptContextKind {
             return "Structures your dictation into a clear, well-organized technical prompt with sections when useful."
         case .neutral:
             return "Makes minimal changes — fixes grammar and punctuation while preserving your original voice."
+        }
+    }
+}
+
+// MARK: - MacBook Notch
+
+private struct MacBookNotch: View {
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            let r: CGFloat = 5
+
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: h))
+                path.addLine(to: CGPoint(x: 0, y: r))
+                path.addArc(
+                    center: CGPoint(x: r, y: r),
+                    radius: r,
+                    startAngle: .degrees(180),
+                    endAngle: .degrees(270),
+                    clockwise: false
+                )
+                path.addLine(to: CGPoint(x: w - r, y: 0))
+                path.addArc(
+                    center: CGPoint(x: w - r, y: r),
+                    radius: r,
+                    startAngle: .degrees(270),
+                    endAngle: .degrees(0),
+                    clockwise: false
+                )
+                path.addLine(to: CGPoint(x: w, y: h))
+                path.closeSubpath()
+            }
+            .fill(Color.white)
         }
     }
 }
