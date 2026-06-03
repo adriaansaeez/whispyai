@@ -4,17 +4,21 @@ struct ProviderSettingsView: View {
     @Bindable var viewModel: SettingsViewModel
     @FocusState private var focusedField: SettingsViewModel.Field?
 
-    private let sectionBackground = Color(red: 0.78, green: 0.86, blue: 0.97)
-
     var body: some View {
         Form {
-            Picker("Provider", selection: $viewModel.selectedProvider) {
-                ForEach(AIProviderKind.allCases) { provider in
-                    Text(provider.rawValue).tag(provider)
+            Section {
+                Picker("Provider", selection: $viewModel.selectedProvider) {
+                    ForEach(AIProviderKind.allCases) { provider in
+                        Text(provider.rawValue).tag(provider)
+                    }
                 }
-            }
-            .onChange(of: viewModel.selectedProvider) { _, _ in
-                viewModel.markChanged()
+                .foregroundStyle(.white)
+                .onChange(of: viewModel.selectedProvider) { _, _ in
+                    viewModel.markChanged()
+                }
+            } header: {
+                Label("Provider", systemImage: "sparkles")
+                    .foregroundStyle(.white)
             }
 
             if viewModel.selectedProvider == .custom {
@@ -38,20 +42,22 @@ struct ProviderSettingsView: View {
                         viewModel.save()
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(AppColors.bright)
                     .disabled(!viewModel.hasChanges)
                 }
             }
         }
+        .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .background(sectionBackground.ignoresSafeArea())
         .onAppear {
             focusedField = .customBaseURL
         }
+        .padding()
     }
 
     @ViewBuilder
     private var customProviderFields: some View {
-        Section("Custom Provider") {
+        Section {
             TextField("Base URL", text: $viewModel.customBaseURL)
                 .textContentType(.URL)
                 .focused($focusedField, equals: .customBaseURL)
@@ -68,6 +74,7 @@ struct ProviderSettingsView: View {
                 }
 
             Toggle("Use API key", isOn: $viewModel.customUseAuth)
+                .foregroundStyle(.white)
                 .onChange(of: viewModel.customUseAuth) { _, _ in
                     viewModel.markChanged()
                     viewModel.connectionResult = nil
@@ -95,12 +102,15 @@ struct ProviderSettingsView: View {
                         .controlSize(.small)
                 }
             }
+        } header: {
+            Label("Custom Provider", systemImage: "gearshape")
+                .foregroundStyle(.white)
         }
     }
 
     @ViewBuilder
     private var genericProviderFields: some View {
-        Section("Provider Settings") {
+        Section {
             TextField("Model", text: $viewModel.selectedModel)
                 .focused($focusedField, equals: .customModel)
                 .onChange(of: viewModel.selectedModel) { _, _ in
@@ -117,7 +127,10 @@ struct ProviderSettingsView: View {
 
             Text("OpenAI will be implemented in a future version.")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColors.light)
+        } header: {
+            Label("Provider Settings", systemImage: "key")
+                .foregroundStyle(.white)
         }
     }
 }

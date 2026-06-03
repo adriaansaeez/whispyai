@@ -1,12 +1,13 @@
+<p align="center">
+  <img src="img/readme-banner.png" alt="WhispyAI Banner" width="100%">
+</p>
+
 # WhispyAI
-
-<div align="center">
-
 **Dictate naturally. Get polished text instantly.**
 
 [macOS 14.0+](https://developer.apple.com/macos/) · [Swift 6.0](https://www.swift.org/) · [OpenAI-compatible](Sources/WhispyAI/Services/AI/CustomProvider.swift)
 
-</div>
+
 
 WhispyAI is a native macOS menubar utility that lets you dictate text using Apple's built-in speech recognition, automatically rewrites it with your preferred AI provider, and inserts the polished result directly into any app — no copy-paste, no context switching.
 

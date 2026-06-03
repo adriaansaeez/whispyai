@@ -23,16 +23,7 @@ enum OnboardingStep: Int, CaseIterable {
     }
 }
 
-// MARK: - Onboarding Colors
 
-private enum OnboardingBlue {
-    static let deep    = Color(red: 0.04, green: 0.12, blue: 0.30)  // #0a1f4d
-    static let dark    = Color(red: 0.08, green: 0.22, blue: 0.50)  // #143880
-    static let mid     = Color(red: 0.15, green: 0.40, blue: 0.75)  // #2666bf
-    static let bright  = Color(red: 0.25, green: 0.58, blue: 0.96)  // #4094f5
-    static let light   = Color(red: 0.65, green: 0.82, blue: 1.0)   // #a6d1ff
-    static let surface = Color.white.opacity(0.12)
-}
 
 // MARK: - Main Onboarding View
 
@@ -51,7 +42,7 @@ struct OnboardingView: View {
         ZStack {
             // Solid blue gradient background
             LinearGradient(
-                colors: [OnboardingBlue.deep, OnboardingBlue.dark, OnboardingBlue.mid],
+                colors: [AppColors.deep, AppColors.dark, AppColors.mid],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -100,7 +91,7 @@ struct OnboardingView: View {
                 .foregroundStyle(.white)
             Text("Speak naturally and let AI rewrite your text\nbefore it is inserted where you are typing.")
                 .font(.title3)
-                .foregroundStyle(OnboardingBlue.light)
+                .foregroundStyle(AppColors.light)
                 .multilineTextAlignment(.center)
             Spacer()
         }
@@ -113,7 +104,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 20) {
             stepTitle(OnboardingStep.provider.title)
             Text("Select the AI service that will rewrite your dictated text. You can change this later in Settings.")
-                .foregroundStyle(OnboardingBlue.light)
+                .foregroundStyle(AppColors.light)
 
             Picker("Provider", selection: $selectedProvider) {
                 ForEach(AIProviderKind.allCases) { provider in
@@ -135,7 +126,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             stepTitle(OnboardingStep.configuration.title)
             Text("Enter the connection details for \(selectedProvider.rawValue).")
-                .foregroundStyle(OnboardingBlue.light)
+                .foregroundStyle(AppColors.light)
 
             if selectedProvider == .custom {
                 TextField("Base URL", text: $customBaseURL)
@@ -156,11 +147,11 @@ struct OnboardingView: View {
 
                 HStack(spacing: 6) {
                     Image(systemName: "lock.shield")
-                        .foregroundStyle(OnboardingBlue.bright)
+                        .foregroundStyle(AppColors.bright)
                         .font(.caption)
                     Text("Your API key is stored securely in Apple Keychain and never leaves your device.")
                         .font(.caption)
-                        .foregroundStyle(OnboardingBlue.light)
+                        .foregroundStyle(AppColors.light)
                 }
             }
 
@@ -176,7 +167,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             stepTitle(OnboardingStep.workMode.title)
             Text("Choose how Whispy processes your dictated text. You can switch modes anytime with the hotkey.")
-                .foregroundStyle(OnboardingBlue.light)
+                .foregroundStyle(AppColors.light)
 
             Picker("Mode", selection: $workMode) {
                 ForEach(PromptContextKind.allCases, id: \.self) { kind in
@@ -192,7 +183,7 @@ struct OnboardingView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(OnboardingBlue.surface)
+                .background(AppColors.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .animation(.easeInOut(duration: 0.2), value: workMode)
 
@@ -208,17 +199,17 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 20) {
             stepTitle(OnboardingStep.hotkey.title)
             Text("This shortcut will start and stop dictation from anywhere on your Mac.")
-                .foregroundStyle(OnboardingBlue.light)
+                .foregroundStyle(AppColors.light)
 
             KeyboardShortcuts.Recorder("Dictation hotkey", name: .toggleDictation)
                 .padding(.top, 8)
 
             HStack(spacing: 6) {
                 Image(systemName: "info.circle")
-                    .foregroundStyle(OnboardingBlue.light)
+                    .foregroundStyle(AppColors.light)
                 Text("Default: Option + Space. You can record a custom shortcut above.")
                     .font(.caption)
-                    .foregroundStyle(OnboardingBlue.light)
+                    .foregroundStyle(AppColors.light)
             }
 
             Spacer()
@@ -240,7 +231,7 @@ struct OnboardingView: View {
                 .foregroundStyle(.white)
             Text("Press your hotkey to start dictating.\nYou can change these settings anytime from the menu bar.")
                 .font(.title3)
-                .foregroundStyle(OnboardingBlue.light)
+                .foregroundStyle(AppColors.light)
                 .multilineTextAlignment(.center)
             Spacer()
         }
@@ -258,7 +249,7 @@ struct OnboardingView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(OnboardingBlue.light)
+                .foregroundStyle(AppColors.light)
             }
 
             Spacer()
@@ -301,7 +292,7 @@ struct OnboardingView: View {
         HStack(spacing: 8) {
             ForEach(1..<OnboardingStep.allCases.count, id: \.self) { index in
                 Circle()
-                    .fill(index <= currentStep.rawValue ? .white : OnboardingBlue.surface)
+                    .fill(index <= currentStep.rawValue ? .white : AppColors.surface)
                     .frame(width: 8, height: 8)
             }
         }

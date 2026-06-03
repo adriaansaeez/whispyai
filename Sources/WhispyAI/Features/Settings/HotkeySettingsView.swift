@@ -5,23 +5,27 @@ struct HotkeySettingsView: View {
     @Bindable var appState: AppState
     @Bindable var viewModel: SettingsViewModel
 
-    private let sectionBackground = Color(red: 0.78, green: 0.86, blue: 0.97)
-
     var body: some View {
         Form {
-            Section("Dictation Hotkey") {
+            Section {
                 KeyboardShortcuts.Recorder("Dictation hotkey", name: .toggleDictation)
+                    .foregroundStyle(.white)
+
                 Text("Default shortcut: Option + Space")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColors.light)
+            } header: {
+                Label("Dictation Hotkey", systemImage: "keyboard")
+                    .foregroundStyle(.white)
             }
 
-            Section("Work Mode") {
+            Section {
                 Picker("Prompt mode", selection: $viewModel.defaultWorkMode) {
                     ForEach(PromptContextKind.allCases, id: \.self) { kind in
                         Text(kind.settingsDisplayName).tag(kind)
                     }
                 }
+                .foregroundStyle(.white)
                 .onChange(of: viewModel.defaultWorkMode) { _, newValue in
                     viewModel.markChanged()
                     appState.manualContextKind = newValue == .autodetect ? nil : newValue
@@ -29,11 +33,14 @@ struct HotkeySettingsView: View {
 
                 Text("Determines how your dictation is rewritten. Auto detects the context automatically.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColors.light)
+            } header: {
+                Label("Work Mode", systemImage: "arrow.triangle.swap")
+                    .foregroundStyle(.white)
             }
         }
+        .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .background(sectionBackground.ignoresSafeArea())
         .padding()
     }
 }
