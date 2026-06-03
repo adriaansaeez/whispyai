@@ -4,6 +4,8 @@ struct ProviderSettingsView: View {
     @Bindable var viewModel: SettingsViewModel
     @FocusState private var focusedField: SettingsViewModel.Field?
 
+    private let sectionBackground = Color(red: 0.78, green: 0.86, blue: 0.97)
+
     var body: some View {
         Form {
             Picker("Provider", selection: $viewModel.selectedProvider) {
@@ -40,6 +42,8 @@ struct ProviderSettingsView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(sectionBackground.ignoresSafeArea())
         .onAppear {
             focusedField = .customBaseURL
         }

@@ -5,6 +5,8 @@ struct HotkeySettingsView: View {
     @Bindable var appState: AppState
     @Bindable var viewModel: SettingsViewModel
 
+    private let sectionBackground = Color(red: 0.78, green: 0.86, blue: 0.97)
+
     var body: some View {
         Form {
             Section("Dictation Hotkey") {
@@ -30,6 +32,8 @@ struct HotkeySettingsView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(sectionBackground.ignoresSafeArea())
         .padding()
     }
 }

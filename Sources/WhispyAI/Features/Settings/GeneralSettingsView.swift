@@ -3,6 +3,8 @@ import SwiftUI
 struct GeneralSettingsView: View {
     @Bindable var appState: AppState
 
+    private let sectionBackground = Color(red: 0.78, green: 0.86, blue: 0.97)
+
     var body: some View {
         Form {
             Toggle("Complete onboarding manually", isOn: $appState.hasCompletedOnboarding)
@@ -12,6 +14,8 @@ struct GeneralSettingsView: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
+        .scrollContentBackground(.hidden)
+        .background(sectionBackground.ignoresSafeArea())
         .padding()
     }
 }
