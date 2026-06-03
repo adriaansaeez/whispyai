@@ -385,9 +385,12 @@ private struct VideoBackground: NSViewRepresentable {
         view.controlsStyle = .none
         view.showsFullScreenToggleButton = false
 
-        guard let url = Bundle.main.url(forResource: "onboarding-bg", withExtension: "mp4") else {
+        guard let url = Self.resourceURL(forResource: "onboarding-bg", withExtension: "mp4") else {
+            DebugLogger.log("onboarding-bg.mp4 not found in any bundle")
             return view
         }
+
+        DebugLogger.log("onboarding-bg.mp4 found at: \(url.path)")
 
         let player = AVPlayer(url: url)
         player.preventsDisplaySleepDuringVideoPlayback = true
@@ -409,6 +412,43 @@ private struct VideoBackground: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: AVPlayerView, context: Context) {}
+
+    private static func resourceURL(forResource name: String, withExtension ext: String) -> URL? {
+        // 1. Try Bundle.main (works in Xcode projects)
+        if let url = Bundle.main.url(forResource: name, withExtension: ext) {
+            return url
+        }
+
+        // 2. SPM executable: resource bundle is next to the executable
+        if let execURL = Bundle.main.executableURL {
+            let execDir = execURL.deletingLastPathComponent()
+            let bundleNames = [
+                "WhispyAI_WhispyAI",
+                "WhispyAI",
+            ]
+
+            for bundleName in bundleNames {
+                let bundleURL = execDir.appendingPathComponent("\(bundleName).bundle")
+                if let url = Bundle(url: bundleURL)?.url(forResource: name, withExtension: ext) {
+                    return url
+                }
+            }
+
+            // 3. Search for any .bundle in the executable directory
+            if let items = try? FileManager.default.contentsOfDirectory(
+                at: execDir,
+                includingPropertiesForKeys: nil
+            ) {
+                for item in items where item.pathExtension == "bundle" {
+                    if let url = Bundle(url: item)?.url(forResource: name, withExtension: ext) {
+                        return url
+                    }
+                }
+            }
+        }
+
+        return nil
+    }
 }
 
 // MARK: - Onboarding Window Controller
