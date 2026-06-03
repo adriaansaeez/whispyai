@@ -1,3 +1,4 @@
+import AppKit
 import Observation
 
 @Observable
@@ -7,7 +8,7 @@ final class AppState {
 
     var dictationState: DictationState = .idle
     var hasCompletedOnboarding = false
-    var menuBarIconName = "waveform.badge.mic"
+    var menuBarImage: NSImage = LogoTemplateShape.templateImage(pointSize: 18)
     var lastErrorMessage: String?
     var isRecording = false
     var detectedContextKind: PromptContextKind?
@@ -145,13 +146,10 @@ final class AppState {
 
         switch state {
         case .listening:
-            menuBarIconName = "mic.fill"
             overlayController.show(.listening)
         case .transcribing, .rewriting, .inserting:
-            menuBarIconName = "arrow.triangle.2.circlepath"
             overlayController.show(.processing(detectedContextKind, isManual: manualContextKind != nil && manualContextKind != .autodetect))
         case .idle, .completed, .failed:
-            menuBarIconName = "waveform.badge.mic"
             overlayController.hide()
             detectedContextKind = nil
         }

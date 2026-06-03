@@ -93,9 +93,9 @@ struct OnboardingView: View {
     private var welcomeStep: some View {
         VStack(spacing: 20) {
             Spacer()
-            Image(systemName: "waveform")
-                .font(.system(size: 56))
-                .foregroundStyle(.blue)
+            LogoShape()
+                .fill(Color(red: 0.2, green: 0.71, blue: 0.96))
+                .frame(width: 80, height: 80)
             Text("WhispyAI")
                 .font(.system(size: 36, weight: .bold))
             Text("Speak naturally and let AI rewrite your text\nbefore it is inserted where you are typing.")
@@ -234,9 +234,9 @@ struct OnboardingView: View {
     private var doneStep: some View {
         VStack(spacing: 20) {
             Spacer()
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(.green)
+            LogoShape()
+                .fill(Color(red: 0.2, green: 0.71, blue: 0.96))
+                .frame(width: 80, height: 80)
             Text("You're all set!")
                 .font(.system(size: 30, weight: .bold))
             Text("Press your hotkey to start dictating.\nYou can change these settings anytime from the menu bar.")

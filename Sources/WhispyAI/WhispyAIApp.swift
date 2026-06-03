@@ -19,8 +19,10 @@ struct WhispyAIApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("WhispyAI", systemImage: appState.menuBarIconName) {
+        MenuBarExtra {
             MenuBarView(appState: appState)
+        } label: {
+            Image(nsImage: appState.menuBarImage)
         }
         .menuBarExtraStyle(.menu)
         .onChange(of: appState.hasCompletedOnboarding) { _, completed in
