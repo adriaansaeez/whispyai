@@ -41,8 +41,6 @@ struct OnboardingView: View {
         ZStack {
             VideoBackground()
 
-            Color.white.opacity(0.88)
-
             VStack(spacing: 0) {
                 stepContent
                 bottomBar
