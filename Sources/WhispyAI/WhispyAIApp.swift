@@ -23,6 +23,11 @@ struct WhispyAIApp: App {
             MenuBarView(appState: appState)
         }
         .menuBarExtraStyle(.menu)
+        .onChange(of: appState.hasCompletedOnboarding) { _, completed in
+            if !completed {
+                OnboardingWindowController.shared.show(appState: appState)
+            }
+        }
     }
 }
 

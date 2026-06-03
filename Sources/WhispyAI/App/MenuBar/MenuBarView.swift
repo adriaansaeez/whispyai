@@ -41,6 +41,11 @@ struct MenuBarView: View {
         }
         .padding(16)
         .frame(width: 300)
+        .onAppear {
+            if !appState.hasCompletedOnboarding {
+                OnboardingWindowController.shared.show(appState: appState)
+            }
+        }
     }
 
     private var dictationButtonLabel: String {
