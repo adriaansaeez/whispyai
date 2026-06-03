@@ -41,3 +41,5 @@ Desktop.ini
 .agents/
 openspec/
 skills-lock.json
+AGENTS.md
+.claude/
