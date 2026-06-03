@@ -8,7 +8,6 @@ final class AppState {
 
     var dictationState: DictationState = .idle
     var hasCompletedOnboarding = false
-    var menuBarImage: NSImage = LogoTemplateShape.templateImage(pointSize: 18)
     var lastErrorMessage: String?
     var isRecording = false
     var detectedContextKind: PromptContextKind?
