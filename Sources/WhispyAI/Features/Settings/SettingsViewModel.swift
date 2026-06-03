@@ -18,12 +18,16 @@ final class SettingsViewModel {
     var selectedModel = "gpt-4o-mini"
     var defaultWorkMode: PromptContextKind = .autodetect
 
+    var availableModels: [String] = []
+    var isFetchingModels = false
+
     var isTestingConnection = false
     var connectionResult: String?
 
     var hasChanges = false
 
     private let store = SettingsStore()
+    private let connectivityService = ProviderConnectivityService()
 
     func load() {
         let settings = store.load()
@@ -57,6 +61,31 @@ final class SettingsViewModel {
         hasChanges = false
     }
 
+    func fetchAvailableModels() async {
+        isFetchingModels = true
+
+        let result = await connectivityService.fetchModels(
+            baseURL: customBaseURL,
+            useAuth: customUseAuth,
+            apiKey: apiKey
+        )
+
+        switch result {
+        case .success(let models):
+            availableModels = models
+            if models.contains(customModel) {
+                // keep current selection
+            } else if !models.isEmpty {
+                customModel = models[0]
+            }
+        case .failure(let message):
+            // keep existing model
+            availableModels = []
+        }
+
+        isFetchingModels = false
+    }
+
     func testConnection() async {
         isTestingConnection = true
         connectionResult = nil
@@ -73,7 +102,6 @@ final class SettingsViewModel {
             return
         }
 
-        let connectivityService = ProviderConnectivityService()
         let result = await connectivityService.testConnection(
             baseURL: customBaseURL,
             model: customModel,

@@ -51,6 +51,22 @@ struct ProviderSettingsView: View {
         .scrollContentBackground(.hidden)
         .onAppear {
             focusedField = .customBaseURL
+            viewModel.load()
+        }
+        .onChange(of: viewModel.customBaseURL) {
+            Task {
+                await viewModel.fetchAvailableModels()
+            }
+        }
+        .onChange(of: viewModel.customUseAuth) {
+            Task {
+                await viewModel.fetchAvailableModels()
+            }
+        }
+        .onChange(of: viewModel.apiKey) {
+            Task {
+                await viewModel.fetchAvailableModels()
+            }
         }
         .padding()
     }
@@ -66,12 +82,33 @@ struct ProviderSettingsView: View {
                     viewModel.connectionResult = nil
                 }
 
-            TextField("Model", text: $viewModel.customModel)
-                .focused($focusedField, equals: .customModel)
-                .onChange(of: viewModel.customModel) { _, _ in
-                    viewModel.markChanged()
-                    viewModel.connectionResult = nil
+            if viewModel.isFetchingModels {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Fetching models...")
+                        .font(.footnote)
+                        .foregroundStyle(AppColors.light)
                 }
+            } else if !viewModel.availableModels.isEmpty {
+                Picker("Model", selection: $viewModel.customModel) {
+                    ForEach(viewModel.availableModels, id: \.self) { model in
+                        Text(model).tag(model)
+                    }
+                }
+                .foregroundStyle(.white)
+            } else {
+                TextField("Model", text: $viewModel.customModel)
+                    .focused($focusedField, equals: .customModel)
+                    .onChange(of: viewModel.customModel) { _, _ in
+                        viewModel.markChanged()
+                        viewModel.connectionResult = nil
+                    }
+
+                Text("Enter model name or fetch from provider above.")
+                    .font(.footnote)
+                    .foregroundStyle(AppColors.light)
+            }
 
             Toggle("Use API key", isOn: $viewModel.customUseAuth)
                 .foregroundStyle(.white)

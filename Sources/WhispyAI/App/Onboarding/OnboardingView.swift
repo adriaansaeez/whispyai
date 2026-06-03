@@ -37,6 +37,9 @@ struct OnboardingView: View {
     @State private var apiKey = ""
     @State private var useAPIKey = false
     @State private var workMode: PromptContextKind = .autodetect
+    @State private var availableModels: [String] = []
+    @State private var isFetchingModels = false
+    @State private var didFetchModels = false
 
     var body: some View {
         ZStack {
@@ -56,6 +59,14 @@ struct OnboardingView: View {
             }
         }
         .frame(width: 600, height: 440)
+        .onChange(of: currentStep) { _, newValue in
+            if newValue == .configuration && selectedProvider == .custom && !didFetchModels {
+                Task {
+                    await fetchModels()
+                    didFetchModels = true
+                }
+            }
+        }
     }
 
     // MARK: - Step Content
@@ -132,8 +143,29 @@ struct OnboardingView: View {
                 TextField("Base URL", text: $customBaseURL)
                     .textFieldStyle(.roundedBorder)
 
-                TextField("Model", text: $customModel)
-                    .textFieldStyle(.roundedBorder)
+                if isFetchingModels {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Fetching models...")
+                            .font(.caption)
+                            .foregroundStyle(AppColors.light)
+                    }
+                } else if !availableModels.isEmpty {
+                    Picker("Model", selection: $customModel) {
+                        ForEach(availableModels, id: \.self) { model in
+                            Text(model).tag(model)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                } else {
+                    TextField("Model", text: $customModel)
+                        .textFieldStyle(.roundedBorder)
+
+                    Text("Enter model name or fetch from provider above.")
+                        .font(.caption)
+                        .foregroundStyle(AppColors.light)
+                }
 
                 Toggle("Use API key", isOn: $useAPIKey)
             } else {
@@ -353,6 +385,40 @@ struct OnboardingView: View {
         appState.manualContextKind = workMode == .autodetect ? nil : workMode
 
         OnboardingWindowController.shared.close()
+    }
+
+    // MARK: - Model Fetching
+
+    private func fetchModels() async {
+        isFetchingModels = true
+
+        var normalizedBaseURL = customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        while normalizedBaseURL.hasSuffix("/") {
+            normalizedBaseURL.removeLast()
+        }
+
+        guard !normalizedBaseURL.isEmpty, let url = URL(string: "\(normalizedBaseURL)/v1/models") else {
+            isFetchingModels = false
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 10
+
+        if useAPIKey, !apiKey.isEmpty {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let decoded = try JSONDecoder().decode(ModelsResponse.self, from: data)
+            availableModels = decoded.data.map(\.id).sorted()
+        } catch {
+            availableModels = []
+        }
+
+        isFetchingModels = false
     }
 }
 
