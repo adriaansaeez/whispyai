@@ -8,6 +8,11 @@ final class RecordingOverlayController {
     enum OverlayState {
         case listening
         case processing(PromptContextKind?, isManual: Bool)
+
+        var isProcessing: Bool {
+            if case .processing = self { return true }
+            return false
+        }
     }
 
     private var panel: NSPanel?
@@ -62,11 +67,21 @@ final class RecordingOverlayController {
 private struct OverlayBadgeView: View {
     let state: RecordingOverlayController.OverlayState
     @State private var isContextVisible = false
+    @State private var isSpinning = false
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: iconName)
-                .font(.system(size: 14, weight: .semibold))
+            if state.isProcessing {
+                Image(systemName: "circle.dotted")
+                    .font(.system(size: 14, weight: .semibold))
+                    .rotation3DEffect(.degrees(isSpinning ? 360 : 0), axis: (x: 0, y: 0, z: 1))
+                    .animation(.linear(duration: 1.0).repeatForever(autoreverses: false), value: isSpinning)
+                    .onAppear { isSpinning = true }
+                    .onDisappear { isSpinning = false }
+            } else {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 14, weight: .semibold))
+            }
 
             if let contextName {
                 Text(contextName)
@@ -85,7 +100,7 @@ private struct OverlayBadgeView: View {
                         }
                     }
             } else {
-                Text(title)
+                Text("Listening")
                     .font(.system(size: 13, weight: .medium))
             }
         }
@@ -102,15 +117,6 @@ private struct OverlayBadgeView: View {
         )
     }
 
-    private var title: String {
-        switch state {
-        case .listening:
-            return "Listening"
-        case let .processing(_, isManual):
-            return isManual ? "Manual" : "Processing"
-        }
-    }
-
     private var contextName: String? {
         switch state {
         case .listening:
@@ -118,15 +124,6 @@ private struct OverlayBadgeView: View {
         case let .processing(kind, isManual):
             guard let kind else { return nil }
             return isManual ? "Manual: \(kind.displayName)" : kind.displayName
-        }
-    }
-
-    private var iconName: String {
-        switch state {
-        case .listening:
-            return "mic.fill"
-        case .processing:
-            return "waveform"
         }
     }
 

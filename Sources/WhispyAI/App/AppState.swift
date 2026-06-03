@@ -145,7 +145,7 @@ final class AppState {
             menuBarIconName = "mic.fill"
             overlayController.show(.listening)
         case .transcribing, .rewriting, .inserting:
-            menuBarIconName = "waveform"
+            menuBarIconName = "arrow.triangle.2.circlepath"
             overlayController.show(.processing(detectedContextKind, isManual: manualContextKind != nil && manualContextKind != .autodetect))
         case .idle, .completed, .failed:
             menuBarIconName = "waveform.badge.mic"
