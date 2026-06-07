@@ -148,9 +148,17 @@ final class AppState {
             overlayController.show(.listening)
         case .transcribing, .rewriting, .inserting:
             overlayController.show(.processing(detectedContextKind, isManual: manualContextKind != nil && manualContextKind != .autodetect))
-        case .idle, .completed, .failed:
+        case .idle, .completed:
             overlayController.hide()
             detectedContextKind = nil
+        case .failed(let error):
+            let message = error.errorDescription ?? "Error"
+            overlayController.show(.error(message))
+            detectedContextKind = nil
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(3))
+                overlayController.hide()
+            }
         }
     }
 }

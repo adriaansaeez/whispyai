@@ -45,6 +45,10 @@ struct SettingsStore: @unchecked Sendable {
             settings.customUseAuth = defaults.bool(forKey: Keys.customUseAuth)
         }
 
+        if defaults.object(forKey: Keys.customAPIPath) != nil {
+            settings.customAPIPath = defaults.string(forKey: Keys.customAPIPath)
+        }
+
         let temperature = defaults.double(forKey: Keys.temperature)
         if defaults.object(forKey: Keys.temperature) != nil {
             settings.temperature = temperature
@@ -72,6 +76,7 @@ struct SettingsStore: @unchecked Sendable {
         defaults.set(settings.customBaseURL, forKey: Keys.customBaseURL)
         defaults.set(settings.customModel, forKey: Keys.customModel)
         defaults.set(settings.customUseAuth, forKey: Keys.customUseAuth)
+        defaults.set(settings.customAPIPath, forKey: Keys.customAPIPath)
         defaults.set(settings.rewritePrompt, forKey: Keys.rewritePrompt)
         defaults.set(settings.defaultWorkMode.rawValue, forKey: Keys.defaultWorkMode)
         defaults.set(settings.temperature, forKey: Keys.temperature)
@@ -95,6 +100,7 @@ private extension SettingsStore {
         static let customBaseURL = "customBaseURL"
         static let customModel = "customModel"
         static let customUseAuth = "customUseAuth"
+        static let customAPIPath = "customAPIPath"
             static let rewritePrompt = "rewritePrompt"
             static let defaultWorkMode = "defaultWorkMode"
         static let temperature = "temperature"

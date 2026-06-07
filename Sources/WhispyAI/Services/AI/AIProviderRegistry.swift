@@ -24,7 +24,8 @@ struct AIProviderRegistry: Sendable {
                 apiKey: apiKey,
                 temperature: settings.temperature,
                 maxTokens: settings.maximumTokens,
-                timeoutSeconds: settings.timeoutSeconds
+                timeoutSeconds: settings.timeoutSeconds,
+                apiPath: settings.customAPIPath
             )
         case .openAI:
             guard let apiKey = try keychainStore.readAPIKey(for: .openAI) else {

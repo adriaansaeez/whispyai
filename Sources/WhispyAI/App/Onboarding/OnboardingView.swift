@@ -40,6 +40,17 @@ struct OnboardingView: View {
     @State private var availableModels: [String] = []
     @State private var isFetchingModels = false
     @State private var didFetchModels = false
+    @State private var isTestingConnection = false
+    @State private var connectionStatus: ConnectionStatus?
+    @State private var modelFetchTask: Task<Void, Never>?
+    @State private var connectionTestTask: Task<Void, Never>?
+
+    private let connectivityService = ProviderConnectivityService()
+
+    enum ConnectionStatus {
+        case success(modelCount: Int, models: [String])
+        case failure(String)
+    }
 
     var body: some View {
         ZStack {
@@ -60,12 +71,20 @@ struct OnboardingView: View {
         }
         .frame(width: 600, height: 440)
         .onChange(of: currentStep) { _, newValue in
+            // Cancel any in-flight tasks when leaving configuration step
+            if newValue != .configuration {
+                cancelInFlightTasks()
+            }
+            
             if newValue == .configuration && selectedProvider == .custom && !didFetchModels {
-                Task {
+                modelFetchTask = Task {
                     await fetchModels()
                     didFetchModels = true
                 }
             }
+        }
+        .onChange(of: currentStep) { _, _ in
+            connectionStatus = nil
         }
     }
 
@@ -168,6 +187,49 @@ struct OnboardingView: View {
                 }
 
                 Toggle("Use API key", isOn: $useAPIKey)
+
+                if !customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let isAPIKeyMissing = useAPIKey && apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    Button {
+                        testConnection()
+                    } label: {
+                        HStack(spacing: 6) {
+                            if isTestingConnection {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
+                            Text("Probar conexión")
+                        }
+                    }
+                    .disabled(isTestingConnection || isAPIKeyMissing)
+                    
+                    if isAPIKeyMissing {
+                        Text("Enter an API key to test the connection.")
+                            .font(.caption)
+                            .foregroundStyle(.yellow)
+                    }
+
+                    if let status = connectionStatus {
+                        switch status {
+                        case let .success(modelCount, models):
+                            Text("Conexión OK — \(modelCount) modelo(s) disponibles")
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                            if !models.isEmpty {
+                                Picker("Model", selection: $customModel) {
+                                    ForEach(models, id: \.self) { model in
+                                        Text(model).tag(model)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                            }
+                        case let .failure(message):
+                            Text("Error: \(message)")
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
+                    }
+                }
             } else {
                 TextField("Model", text: $selectedModel)
                     .textFieldStyle(.roundedBorder)
@@ -397,7 +459,24 @@ struct OnboardingView: View {
             normalizedBaseURL.removeLast()
         }
 
-        guard !normalizedBaseURL.isEmpty, let url = URL(string: "\(normalizedBaseURL)/v1/models") else {
+        guard !normalizedBaseURL.isEmpty, let baseComponents = URLComponents(string: normalizedBaseURL) else {
+            isFetchingModels = false
+            return
+        }
+
+        // Build endpoint path
+        let basePath = baseComponents.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let endpoint = basePath.isEmpty ? "/v1/models" : "\(basePath)/v1/models"
+
+        // Construct final URL
+        var finalComponents = URLComponents()
+        finalComponents.scheme = baseComponents.scheme ?? "http"
+        finalComponents.host = baseComponents.host ?? ""
+        finalComponents.port = baseComponents.port
+        finalComponents.path = "/\(endpoint)"
+        finalComponents.queryItems = baseComponents.queryItems
+
+        guard let url = finalComponents.url else {
             isFetchingModels = false
             return
         }
@@ -412,13 +491,63 @@ struct OnboardingView: View {
 
         do {
             let (data, _) = try await URLSession.shared.data(for: request)
+            guard !Task.isCancelled else { return }
             let decoded = try JSONDecoder().decode(ModelsResponse.self, from: data)
             availableModels = decoded.data.map(\.id).sorted()
         } catch {
+            guard !Task.isCancelled else { return }
             availableModels = []
         }
 
         isFetchingModels = false
+    }
+
+    // MARK: - Connection Test
+
+    private func testConnection() {
+        // Cancel any existing connection test
+        connectionTestTask?.cancel()
+        
+        isTestingConnection = true
+        connectionStatus = nil
+
+        let baseURL = customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !baseURL.isEmpty else {
+            connectionStatus = .failure("La URL no puede estar vacía")
+            isTestingConnection = false
+            return
+        }
+
+        connectionTestTask = Task {
+            let result = await connectivityService.testConnection(
+                baseURL: baseURL,
+                model: customModel,
+                useAuth: useAPIKey,
+                apiKey: apiKey
+            )
+
+            guard !Task.isCancelled else {
+                isTestingConnection = false
+                return
+            }
+
+            switch result {
+            case let .success(modelCount):
+                let models = availableModels.isEmpty ? [] : availableModels
+                connectionStatus = .success(modelCount: modelCount, models: models)
+            case let .failure(message):
+                connectionStatus = .failure(message)
+            }
+
+            isTestingConnection = false
+        }
+    }
+
+    private func cancelInFlightTasks() {
+        modelFetchTask?.cancel()
+        modelFetchTask = nil
+        connectionTestTask?.cancel()
+        connectionTestTask = nil
     }
 }
 
