@@ -7,6 +7,28 @@ struct CustomProvider: AIProvider {
     let temperature: Double
     let maxTokens: Int
     let timeoutSeconds: Int
+    let apiPath: String
+
+    init(baseURL: String, model: String, apiKey: String?, temperature: Double, maxTokens: Int, timeoutSeconds: Int, apiPath: String? = nil) {
+        self.baseURL = baseURL
+        self.model = model
+        self.apiKey = apiKey
+        self.temperature = temperature
+        self.maxTokens = maxTokens
+        self.timeoutSeconds = timeoutSeconds
+        self.apiPath = apiPath ?? Self.autoDetectAPIPath(baseURL)
+    }
+
+    private static func autoDetectAPIPath(_ baseURL: String) -> String {
+        guard let components = URLComponents(string: baseURL) else {
+            return "/v1"
+        }
+        let path = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !path.isEmpty else {
+            return "/v1"
+        }
+        return "/\(path)/v1"
+    }
 
     func transform(text: String, prompt: String) async throws -> String {
         let messages = [
@@ -21,8 +43,36 @@ struct CustomProvider: AIProvider {
             maxTokens: maxTokens
         )
 
-        guard let url = URL(string: "\(baseURL)/v1/chat/completions") else {
-            throw WhispyError.notImplemented("Invalid custom provider URL")
+        guard let baseComponents = URLComponents(string: baseURL) else {
+            throw WhispyError.notImplemented("Invalid custom provider URL: \(baseURL)")
+        }
+
+        // Parse apiPath to separate path from query params
+        let normalizedAPIPath = apiPath.hasPrefix("/") ? apiPath : "/\(apiPath)"
+        let apiPathComponents = URLComponents(string: normalizedAPIPath)
+        let apiPathOnly = apiPathComponents?.path ?? normalizedAPIPath
+        let apiPathQueryItems = apiPathComponents?.queryItems ?? []
+
+        // Build the endpoint path
+        let basePath = baseComponents.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let endpoint = basePath.isEmpty ? "\(apiPathOnly)/chat/completions" : "\(basePath)\(apiPathOnly)/chat/completions"
+
+        // Combine query items from baseURL and apiPath
+        let baseQueryItems = baseComponents.queryItems ?? []
+        let allQueryItems = baseQueryItems + apiPathQueryItems
+
+        // Construct final URL with query params
+        var finalComponents = URLComponents()
+        finalComponents.scheme = baseComponents.scheme ?? "http"
+        finalComponents.host = baseComponents.host ?? ""
+        finalComponents.port = baseComponents.port
+        finalComponents.path = "/\(endpoint)"
+        if !allQueryItems.isEmpty {
+            finalComponents.queryItems = allQueryItems
+        }
+
+        guard let url = finalComponents.url else {
+            throw WhispyError.notImplemented("Invalid custom provider URL: \(finalComponents.string ?? "nil")")
         }
 
         var request = URLRequest(url: url)

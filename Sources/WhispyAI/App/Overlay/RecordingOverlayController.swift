@@ -8,6 +8,7 @@ final class RecordingOverlayController {
     enum OverlayState {
         case listening
         case processing(PromptContextKind?, isManual: Bool)
+        case error(String)
 
         var isProcessing: Bool {
             if case .processing = self { return true }
@@ -16,20 +17,14 @@ final class RecordingOverlayController {
     }
 
     private var panel: NSPanel?
-    private var hostingView: NSHostingView<OverlayBadgeView>?
 
     func show(_ state: OverlayState) {
         let panel = panel ?? makePanel()
         let view = OverlayBadgeView(state: state)
 
-        if let hostingView {
-            hostingView.rootView = view
-        } else {
-            let newHostingView = NSHostingView(rootView: view)
-            newHostingView.frame = NSRect(x: 0, y: 0, width: 250, height: 44)
-            panel.contentView = newHostingView
-            hostingView = newHostingView
-        }
+        let newHostingView = NSHostingView(rootView: view)
+        newHostingView.frame = NSRect(x: 0, y: 0, width: 250, height: 44)
+        panel.contentView = newHostingView
 
         positionPanelNearCursor(panel)
         panel.orderFrontRegardless()
@@ -78,6 +73,9 @@ private struct OverlayBadgeView: View {
                     .animation(.linear(duration: 1.0).repeatForever(autoreverses: false), value: isSpinning)
                     .onAppear { isSpinning = true }
                     .onDisappear { isSpinning = false }
+            } else if case .error = state {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 14, weight: .semibold))
             } else {
                 Image(systemName: "mic.fill")
                     .font(.system(size: 14, weight: .semibold))
@@ -124,6 +122,8 @@ private struct OverlayBadgeView: View {
         case let .processing(kind, isManual):
             guard let kind else { return nil }
             return isManual ? "Manual: \(kind.displayName)" : kind.displayName
+        case let .error(message):
+            return String(message.prefix(120))
         }
     }
 
@@ -144,6 +144,8 @@ private struct OverlayBadgeView: View {
             case .neutral:
                 return Color(red: 0.95, green: 0.91, blue: 0.84)
             }
+        case .error:
+            return Color(red: 1.0, green: 0.85, blue: 0.85)
         }
     }
 
@@ -164,6 +166,8 @@ private struct OverlayBadgeView: View {
             case .neutral:
                 return Color(red: 0.45, green: 0.31, blue: 0.14)
             }
+        case .error:
+            return Color(red: 0.6, green: 0.1, blue: 0.1)
         }
     }
 }

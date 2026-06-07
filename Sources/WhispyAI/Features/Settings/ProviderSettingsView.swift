@@ -54,21 +54,18 @@ struct ProviderSettingsView: View {
             viewModel.load()
         }
         .onChange(of: viewModel.customBaseURL) {
-            Task {
-                await viewModel.fetchAvailableModels()
-            }
+            viewModel.fetchAvailableModels()
         }
         .onChange(of: viewModel.customUseAuth) {
-            Task {
-                await viewModel.fetchAvailableModels()
-            }
+            viewModel.fetchAvailableModels()
         }
         .onChange(of: viewModel.apiKey) {
-            Task {
-                await viewModel.fetchAvailableModels()
-            }
+            viewModel.fetchAvailableModels()
         }
         .padding()
+        .onDisappear {
+            viewModel.cancelAllTasks()
+        }
     }
 
     @ViewBuilder
@@ -126,18 +123,23 @@ struct ProviderSettingsView: View {
                     }
             }
 
+            let isAPIKeyMissing = viewModel.customUseAuth && viewModel.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             Button("Comprobar conexión") {
-                Task {
-                    await viewModel.testConnection()
-                }
+                viewModel.testConnection()
             }
-            .disabled(viewModel.isTestingConnection)
+            .disabled(viewModel.isTestingConnection || isAPIKeyMissing)
             .overlay(alignment: .trailing) {
                 if viewModel.isTestingConnection {
                     ProgressView()
                         .progressViewStyle(.circular)
                         .controlSize(.small)
                 }
+            }
+            
+            if isAPIKeyMissing {
+                Text("Enter an API key to test the connection.")
+                    .font(.footnote)
+                    .foregroundStyle(.yellow)
             }
         } header: {
             Label("Custom Provider", systemImage: "gearshape")

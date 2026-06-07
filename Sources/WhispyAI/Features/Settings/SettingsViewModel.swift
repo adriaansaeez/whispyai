@@ -28,6 +28,8 @@ final class SettingsViewModel {
 
     private let store = SettingsStore()
     private let connectivityService = ProviderConnectivityService()
+    private var modelFetchTask: Task<Void, Never>?
+    private var connectionTestTask: Task<Void, Never>?
 
     func load() {
         let settings = store.load()
@@ -61,7 +63,23 @@ final class SettingsViewModel {
         hasChanges = false
     }
 
-    func fetchAvailableModels() async {
+    func cancelAllTasks() {
+        modelFetchTask?.cancel()
+        modelFetchTask = nil
+        connectionTestTask?.cancel()
+        connectionTestTask = nil
+    }
+
+    func fetchAvailableModels() {
+        modelFetchTask?.cancel()
+        modelFetchTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled else { return }
+            await self?.performModelFetch()
+        }
+    }
+
+    private func performModelFetch() async {
         isFetchingModels = true
 
         let result = await connectivityService.fetchModels(
@@ -69,6 +87,8 @@ final class SettingsViewModel {
             useAuth: customUseAuth,
             apiKey: apiKey
         )
+
+        guard !Task.isCancelled else { return }
 
         switch result {
         case .success(let models):
@@ -78,7 +98,7 @@ final class SettingsViewModel {
             } else if !models.isEmpty {
                 customModel = models[0]
             }
-        case .failure(let message):
+        case .failure:
             // keep existing model
             availableModels = []
         }
@@ -86,7 +106,16 @@ final class SettingsViewModel {
         isFetchingModels = false
     }
 
-    func testConnection() async {
+    func testConnection() {
+        connectionTestTask?.cancel()
+        connectionTestTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled else { return }
+            await self?.performConnectionTest()
+        }
+    }
+
+    private func performConnectionTest() async {
         isTestingConnection = true
         connectionResult = nil
 
@@ -108,6 +137,8 @@ final class SettingsViewModel {
             useAuth: customUseAuth,
             apiKey: apiKey
         )
+
+        guard !Task.isCancelled else { return }
 
         switch result {
         case .success(let modelCount):

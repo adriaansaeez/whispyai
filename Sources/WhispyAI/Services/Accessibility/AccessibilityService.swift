@@ -159,8 +159,8 @@ private extension AccessibilityService {
         Thread.sleep(forTimeInterval: 0.15)
 
         guard let source = CGEventSource(stateID: .combinedSessionState),
-              let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true),
-              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false) else {
+              let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x0B, keyDown: true),
+              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x0B, keyDown: false) else {
             DebugLogger.log("failed to create CGEvents for paste fallback")
             restorePasteboard(previousItems, on: pasteboard)
             throw WhispyError.insertionFailed

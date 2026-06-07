@@ -17,11 +17,42 @@ struct ProviderConnectivityService: Sendable {
         self.session = session
     }
 
-    func testConnection(baseURL: String, model: String, useAuth: Bool, apiKey: String) async -> ConnectivityResult {
+    func testConnection(baseURL: String, model: String, useAuth: Bool, apiKey: String, apiPath: String? = nil) async -> ConnectivityResult {
         var normalizedBaseURL = baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
         normalizedBaseURL = normalizedBaseURL.removingTrailingSlash()
 
-        guard let url = URL(string: "\(normalizedBaseURL)/v1/models") else {
+        let resolvedAPIPath = apiPath ?? "/v1"
+        let normalizedAPIPath = resolvedAPIPath.hasPrefix("/") ? resolvedAPIPath : "/\(resolvedAPIPath)"
+
+        // Parse apiPath to separate path from query params
+        let apiPathComponents = URLComponents(string: normalizedAPIPath)
+        let apiPathOnly = apiPathComponents?.path ?? normalizedAPIPath
+        let apiPathQueryItems = apiPathComponents?.queryItems ?? []
+
+        // Parse baseURL
+        guard let baseComponents = URLComponents(string: normalizedBaseURL) else {
+            return .failure("URL inválida")
+        }
+
+        // Build endpoint path
+        let basePath = baseComponents.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let endpoint = basePath.isEmpty ? "\(apiPathOnly)/models" : "\(basePath)\(apiPathOnly)/models"
+
+        // Combine query items
+        let baseQueryItems = baseComponents.queryItems ?? []
+        let allQueryItems = baseQueryItems + apiPathQueryItems
+
+        // Construct final URL
+        var finalComponents = URLComponents()
+        finalComponents.scheme = baseComponents.scheme ?? "http"
+        finalComponents.host = baseComponents.host ?? ""
+        finalComponents.port = baseComponents.port
+        finalComponents.path = "/\(endpoint)"
+        if !allQueryItems.isEmpty {
+            finalComponents.queryItems = allQueryItems
+        }
+
+        guard let url = finalComponents.url else {
             return .failure("URL inválida")
         }
 
@@ -76,11 +107,42 @@ struct ProviderConnectivityService: Sendable {
         return "Error \(statusCode): \(body)"
     }
 
-    func fetchModels(baseURL: String, useAuth: Bool, apiKey: String) async -> FetchModelsResult {
+    func fetchModels(baseURL: String, useAuth: Bool, apiKey: String, apiPath: String? = nil) async -> FetchModelsResult {
         var normalizedBaseURL = baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
         normalizedBaseURL = normalizedBaseURL.removingTrailingSlash()
 
-        guard !normalizedBaseURL.isEmpty, let url = URL(string: "\(normalizedBaseURL)/v1/models") else {
+        let resolvedAPIPath = apiPath ?? "/v1"
+        let normalizedAPIPath = resolvedAPIPath.hasPrefix("/") ? resolvedAPIPath : "/\(resolvedAPIPath)"
+
+        // Parse apiPath to separate path from query params
+        let apiPathComponents = URLComponents(string: normalizedAPIPath)
+        let apiPathOnly = apiPathComponents?.path ?? normalizedAPIPath
+        let apiPathQueryItems = apiPathComponents?.queryItems ?? []
+
+        // Parse baseURL
+        guard !normalizedBaseURL.isEmpty, let baseComponents = URLComponents(string: normalizedBaseURL) else {
+            return .failure("URL inválida")
+        }
+
+        // Build endpoint path
+        let basePath = baseComponents.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let endpoint = basePath.isEmpty ? "\(apiPathOnly)/models" : "\(basePath)\(apiPathOnly)/models"
+
+        // Combine query items
+        let baseQueryItems = baseComponents.queryItems ?? []
+        let allQueryItems = baseQueryItems + apiPathQueryItems
+
+        // Construct final URL
+        var finalComponents = URLComponents()
+        finalComponents.scheme = baseComponents.scheme ?? "http"
+        finalComponents.host = baseComponents.host ?? ""
+        finalComponents.port = baseComponents.port
+        finalComponents.path = "/\(endpoint)"
+        if !allQueryItems.isEmpty {
+            finalComponents.queryItems = allQueryItems
+        }
+
+        guard let url = finalComponents.url else {
             return .failure("URL inválida")
         }
 
